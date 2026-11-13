@@ -1,0 +1,17 @@
+{
+  "name": "amateur-sports",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev -w api\" \"npm run dev -w web\"",
+    "db:generate": "npm run generate -w db",
+    "db:migrate": "npm run migrate -w db",
+    "db:seed": "npm run seed -w db"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

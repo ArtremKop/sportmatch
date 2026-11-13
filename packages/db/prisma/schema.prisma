@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum GameType {
+  ONE_ON_ONE
+  TEAM
+}
+
+enum GameStatus {
+  OPEN
+  CANCELLED
+  STARTED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  city         String?
+  createdAt    DateTime @default(now())
+
+  sports         UserSport[]
+  organizedGames Game[]            @relation("Organizer")
+  participations GameParticipant[]
+  refreshTokens  RefreshToken[]
+  chatMessages   ChatMessage[]
+}
+
+model Sport {
+  id    String      @id @default(cuid())
+  name  String      @unique
+  users UserSport[]
+  games Game[]
+}
+
+model UserSport {
+  id      String      @id @default(cuid())
+  userId  String
+  sportId String
+  skill   SkillLevel?
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sport   Sport       @relation(fields: [sportId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sportId])
+}
+
+model Game {
+  id              String      @id @default(cuid())
+  type            GameType
+  status          GameStatus  @default(OPEN)
+  sportId         String
+  startsAt        DateTime
+  locationName    String
+  latitude        Float
+  longitude       Float
+  maxParticipants Int
+  skillPref       SkillLevel?
+  notes           String?
+  organizerId     String
+  createdAt       DateTime    @default(now())
+
+  sport        Sport             @relation(fields: [sportId], references: [id])
+  organizer    User              @relation("Organizer", fields: [organizerId], references: [id])
+  participants GameParticipant[]
+  messages     ChatMessage[]
+}
+
+model GameParticipant {
+  id       String   @id @default(cuid())
+  gameId   String
+  userId   String
+  joinedAt DateTime @default(now())
+  game     Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, userId])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  gameId    String
+  userId    String
+  text      String
+  createdAt DateTime @default(now())
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
